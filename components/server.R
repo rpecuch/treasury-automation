@@ -213,7 +213,6 @@ server <- function(input, output, session) {
                                 donor_email = email,
                                 # Stripe payment method
                                 payment_method_id = payment_config$stripe$payment_method_id, # comes from Payment Methods
-                                # payment_method = "Stripe", # must exist in Quickbooks
                                 # Bank of America checking
                                 deposit_account_id = payment_config$stripe$deposit_account_id, # comes from Accounts, must be of type Bank
                                 billing_address = billing_address,
