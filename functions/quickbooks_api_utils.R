@@ -277,7 +277,7 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
 post_customer <- function(access_token, realm_id, intuit_url,
                           customer_name, email, phone, 
                           line1, line2, city, state, postal_code, country){
-  tryCatch(expr ={
+  # tryCatch(expr ={
     # -----------------------------
     # Customer Data
     # -----------------------------
@@ -313,35 +313,49 @@ post_customer <- function(access_token, realm_id, intuit_url,
     # -----------------------------
     # Create Customer
     # -----------------------------
-    response <- request(url)
-    
-    response <- response |>
-      req_method("POST")
-    
-    response <- response |>
-      req_headers(
+    # Post sales receipt
+    response <- POST(
+      url = url,
+      add_headers(
         Authorization = paste("Bearer", access_token),
         Accept = "application/json",
-        `Content-Type` = "application/json"
-      )
+        "Content-Type" = "application/json"
+      ),
+      body = toJSON(customer_data, auto_unbox = TRUE)
+    )
+    content <- content(response, as = "parsed")
+    print(content)
+    stop()
     
-    response <- response |>
-      req_body_json(customer_data, auto_unbox = TRUE)
-    
-    response <- response |>
-      req_perform()
+    # response <- request(url)
+    # 
+    # response <- response |>
+    #   req_method("POST")
+    # 
+    # response <- response |>
+    #   req_headers(
+    #     Authorization = paste("Bearer", access_token),
+    #     Accept = "application/json",
+    #     `Content-Type` = "application/json"
+    #   )
+    # 
+    # response <- response |>
+    #   req_body_json(customer_data, auto_unbox = TRUE)
+    # 
+    # response <- response |>
+    #   req_perform()
     
     # -----------------------------
     # Parse Response
     # -----------------------------
-    response_body <- resp_body_string(response)
-    data <- fromJSON(response_body)
-  }, 
-  error = function(e){
-    print(paste("Error creating customer", customer_name, ":", e))
-    data <- list()
-    }
-  )
+    # response_body <- resp_body_string(response)
+    # data <- fromJSON(response_body)
+  # }, 
+  # error = function(e){
+  #   print(paste("Error creating customer", customer_name, ":", e))
+  #   data <- list()
+  #   }
+  # )
   
   # -----------------------------
   # Output Result
