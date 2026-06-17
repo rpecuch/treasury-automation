@@ -10,9 +10,8 @@ library(openxlsx)
 library(stringr)
 library(shinycssloaders)
 
-# T0DO: modal/spinner during stripe progress
-
 # R2 TODO:
+# modal/spinner during stripe progress
 # add fundraising keywords as well and if none present prompt me to categorize
 
 # Load environmental vars
@@ -28,6 +27,7 @@ if (Sys.getenv("APP_ENV") == "DEVELOPMENT"){
 source("functions/ui_utils.R")
 source("functions/quickbooks_api_utils.R")
 source("functions/stripe_api_utils.R")
+source("components/global_vars.R")
 source("components/ui.R")
 source("components/server.R")
 
