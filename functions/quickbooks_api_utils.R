@@ -171,6 +171,11 @@ post_purchase <- function(access_token, realm_id, intuit_url,
 }
 
 get_sales_result <- function(response, payment_method){
+  # If Customer was not created successfully
+  if (is.null(response)){
+    return("Not entered in Quickbooks")
+  }
+  
   content <- content(response, as = "parsed")
   
   if (response$status_code == 200){
@@ -190,6 +195,13 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
                       billing_address, shipping_date, 
                       amount_positive, description_positive, item_positive_id,
                       amount_negative, description_negative, item_negative_id){
+  
+  # If Customer could not be created
+  if (is.null(donor_id)){
+    return(NULL)
+  }
+  
+  
   # Form URL
   url <- paste0(
     intuit_url,
@@ -262,83 +274,74 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
   return(res)
 }
 
-# empty_to_null <- function(x) {
-#   if (is.character(x) && length(x) == 0) {
-#     return(NULL)
-#   }
-#   x
-# }
-
 post_customer <- function(access_token, realm_id, intuit_url,
                           customer_name, email, phone, 
                           line1, line2, city, state, postal_code, country){
-  # -----------------------------
-  # Customer Data
-  # -----------------------------
-  customer_data <- list(
-    DisplayName = customer_name,
-    # CompanyName = "Acme Corporation",
-    # GivenName = "John",
-    # FamilyName = "Doe",
-    PrimaryEmailAddr = list(
-      Address = email
-    ),
-    PrimaryPhone = list(
-      FreeFormNumber = phone
-    ),
-    BillAddr = list(
-      Line1 = line1,
-      Line2 = line2,
-      City = city,
-      CountrySubDivisionCode = state,
-      PostalCode = postal_code,
-      Country = country
+  tryCatch(expr ={
+    # -----------------------------
+    # Customer Data
+    # -----------------------------
+    customer_data <- list(
+      DisplayName = customer_name,
+      # CompanyName = "Acme Corporation",
+      # GivenName = "John",
+      # FamilyName = "Doe",
+      PrimaryEmailAddr = list(
+        Address = email
+      ),
+      PrimaryPhone = list(
+        FreeFormNumber = phone
+      ),
+      BillAddr = list(
+        Line1 = line1,
+        Line2 = line2,
+        City = city,
+        CountrySubDivisionCode = state,
+        PostalCode = postal_code,
+        Country = country
+      )
     )
-  )
-  
-  # -----------------------------
-  # QuickBooks Customer Endpoint
-  # -----------------------------
-  url <- paste0(
-    intuit_url,
-    realm_id,
-    "/customer"
-  )
-  # -----------------------------
-  # Create Customer
-  # -----------------------------
-  response <- request(url)
-  
-  response <- response |>
-    req_method("POST")
-  
-  response <- response |>
-    req_headers(
-      Authorization = paste("Bearer", access_token),
-      Accept = "application/json",
-      `Content-Type` = "application/json"
+    
+    # -----------------------------
+    # QuickBooks Customer Endpoint
+    # -----------------------------
+    url <- paste0(
+      intuit_url,
+      realm_id,
+      "/customer"
     )
-  
-  response <- response |>
-    req_body_json(customer_data, auto_unbox = TRUE)
-  
-  response <- response |>
-    req_perform()
-  # response <- request(url) |>
-  #   req_method("POST") |>
-  #   req_headers(
-  #     Authorization = paste("Bearer", access_token),
-  #     Accept = "application/json",
-  #     `Content-Type` = "application/json"
-  #   ) |>
-  #   req_body_json(customer_data, auto_unbox = TRUE) |>
-  #   req_perform()
-  
-  # -----------------------------
-  # Parse Response
-  # -----------------------------
-  response_body <- resp_body_string(response)
-  data <- fromJSON(response_body)
+    # -----------------------------
+    # Create Customer
+    # -----------------------------
+    response <- request(url)
+    
+    response <- response |>
+      req_method("POST")
+    
+    response <- response |>
+      req_headers(
+        Authorization = paste("Bearer", access_token),
+        Accept = "application/json",
+        `Content-Type` = "application/json"
+      )
+    
+    response <- response |>
+      req_body_json(customer_data, auto_unbox = TRUE)
+    
+    response <- response |>
+      req_perform()
+    
+    # -----------------------------
+    # Parse Response
+    # -----------------------------
+    response_body <- resp_body_string(response)
+    data <- fromJSON(response_body)
+  }, 
+  error = function(e){
+    print(paste("Error creating customer", customer_name, ":", e))
+    data <- list()
+    }
+  )
   
   # -----------------------------
   # Output Result
@@ -350,7 +353,8 @@ post_customer <- function(access_token, realm_id, intuit_url,
     print(data$Customer$DisplayName)
     return(data$Customer$Id)
   } else {
+    print("Failed to create customer.\n")
     print(data)
-    stop("Failed to create customer.\n")
+    return(NULL)
   }
 }
