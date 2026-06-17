@@ -291,7 +291,7 @@ post_customer <- function(access_token, realm_id, intuit_url,
       ),
       BillAddr = list(
         Line1 = line1,
-        Line2 = line2,
+        # Line2 = line2,
         City = city,
         CountrySubDivisionCode = state,
         PostalCode = postal_code,
