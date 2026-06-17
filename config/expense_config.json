@@ -1,0 +1,13 @@
+{
+  "Check": {},
+  "Credit": {},
+  "Debit": {},
+  "EFT": {},
+  "stripe":{
+    "acct_ref": "264",
+    "vendor_id": "4756",
+    "category_ref": "1150040001",
+    "payment_method_id": "4"
+  },
+  "Zelle": {}
+}

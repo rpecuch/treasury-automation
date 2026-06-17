@@ -38,6 +38,9 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+.env
+renv/
+renv.lock
 
 # pkgdown site
 docs/
@@ -47,3 +50,4 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+.posit/

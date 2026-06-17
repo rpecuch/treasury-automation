@@ -1,0 +1,9 @@
+{
+  "stripe": {
+    "deposit_account_id": "264",
+    "item_negative_id": "60",
+    "item_positive_memorial": "38",
+    "item_positive_fundraiser": "32",
+    "payment_method_id": "23"
+  }
+}
