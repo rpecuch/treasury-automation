@@ -283,9 +283,6 @@ post_customer <- function(access_token, realm_id, intuit_url,
     # -----------------------------
     customer_data <- list(
       DisplayName = customer_name,
-      # CompanyName = "Acme Corporation",
-      # GivenName = "John",
-      # FamilyName = "Doe",
       PrimaryEmailAddr = list(
         Address = email
       ),
@@ -314,6 +311,7 @@ post_customer <- function(access_token, realm_id, intuit_url,
     # Create Customer
     # -----------------------------
     # Post sales receipt
+    print(customer_data)
     response <- POST(
       url = url,
       add_headers(
