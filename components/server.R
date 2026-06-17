@@ -227,10 +227,16 @@ server <- function(input, output, session) {
                                 # Stripe processing charge
                                 item_negative_id = payment_config$stripe$item_negative_id # comes from Items, should inidcate process change from stripe
           )
+          
           # Print result
           sale_no <- get_sales_result(response, "Stripe")
+  
           # Append row to table of entered stripe payments
-          status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
+          status <- "Not Entered - Automation Failure"
+          if (!is.null(response)){
+            if (response$status_code == 200) status <- "Entered Successfully"
+          }
+          
           entered_details <- entered_payment_list(payout.date = get_value(stripe_payouts)$arrival_date[i],
                                                   payment.date = payment_details$created,
                                                   status = status,
