@@ -341,7 +341,6 @@ post_customer <- function(access_token, realm_id, intuit_url,
   # Create Customer
   # -----------------------------
   # Post sales receipt
-  print(customer_data)
   response <- POST(
     url = url,
     add_headers(
@@ -352,21 +351,19 @@ post_customer <- function(access_token, realm_id, intuit_url,
     body = toJSON(customer_data, auto_unbox = TRUE)
   )
   content <- content(response, as = "parsed")
-  print(content)
-  stop()
     
   # -----------------------------
   # Output Result
   # -----------------------------
-  if (!is.null(data$Customer)) {
+  if (!is.null(content$Customer)) {
     cat("Customer created successfully.\n")
     
     # Print created customer info
-    print(data$Customer$DisplayName)
-    return(data$Customer$Id)
+    print(content$Customer$DisplayName)
+    return(content$Customer$Id)
   } else {
     print("Failed to create customer.\n")
-    print(data)
+    print(content)
     return(NULL)
   }
 }
