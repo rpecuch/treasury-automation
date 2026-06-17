@@ -76,17 +76,40 @@ get_quickbooks_payment_methods <- function(access_token, realmID, intuit_url){
   return(methods)
 }
 
-get_quickbooks_customers <- function(access_token, realmID, intuit_url){
-  response <- GET(
-    paste0(intuit_url, realmID, "/query?query=", URLencode("select * from Customer", reserved=T)),
-    add_headers(Authorization = paste("Bearer", access_token))
-  )
-  content <- content(response, as = "text")
-  json_data <- fromJSON(content)
+get_quickbooks_customers <- function(access_token, realmID, intuit_url, page_size=1000){
+  all_customers <- list()
+  start_position <- 1
   
-  # Format into data frame
-  customers <- json_data$QueryResponse$Customer
-  return(customers)
+  repeat{
+    response <- GET(
+      paste0(intuit_url, realmID, "/query?query=", 
+             URLencode(paste0("select * from Customer STARTPOSITION ", start_position, " MAXRESULTS ", page_size), reserved=T)
+             ),
+      add_headers(Authorization = paste("Bearer", access_token))
+    )
+    
+    content <- content(response, as = "text")
+    json_data <- fromJSON(content)
+    # Format into data frame
+    customers <- json_data$QueryResponse$Customer
+    
+    # Stop if no customers returned
+    if (is.null(customers) || nrow(customers) == 0) {
+      break
+    }
+    
+    all_customers <- rbind(all_customers, customers)
+    
+    # Stop when fewer than requested are returned
+    if (nrow(customers) < page_size) {
+      break
+    }
+    
+    start_position <- start_position + page_size
+  }
+
+
+  return(all_customers)
 }
 
 get_quickbooks_items <- function(access_token, realmID, intuit_url){
