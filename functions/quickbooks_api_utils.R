@@ -77,7 +77,7 @@ get_quickbooks_payment_methods <- function(access_token, realmID, intuit_url){
 }
 
 get_quickbooks_customers <- function(access_token, realmID, intuit_url, page_size=1000){
-  all_customers <- list()
+  all_customers <- data.frame()
   start_position <- 1
   
   repeat{
@@ -98,7 +98,10 @@ get_quickbooks_customers <- function(access_token, realmID, intuit_url, page_siz
       break
     }
     
-    all_customers <- rbind(all_customers, customers)
+    print(dim(customers))
+    print(dim(all_customers))
+    all_customers <- bind_rows(all_customers, customers)
+    print(dim(all_customers))
     
     # Stop when fewer than requested are returned
     if (nrow(customers) < page_size) {
