@@ -98,10 +98,7 @@ get_quickbooks_customers <- function(access_token, realmID, intuit_url, page_siz
       break
     }
     
-    print(dim(customers))
-    print(dim(all_customers))
     all_customers <- bind_rows(all_customers, customers)
-    print(dim(all_customers))
     
     # Stop when fewer than requested are returned
     if (nrow(customers) < page_size) {
@@ -210,6 +207,7 @@ get_sales_result <- function(response, payment_method){
     return(content$SalesReceipt$DocNumber)
   } else{
     print(paste("Sale was not entered successfully:", content))
+    stop()
     return("Not entered in Quickbooks")
   }
 }
@@ -284,6 +282,8 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
       )
     )
   )
+  
+  print(toJSON(body, auto_unbox = TRUE))
   
   # Post sales receipt
   res <- POST(
