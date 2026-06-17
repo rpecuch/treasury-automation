@@ -29,7 +29,7 @@ get_access_token <- function(client_id, client_secret, token_url, auth_code, red
     encode = "form"
   )
   
-  content(response, as = "parsed")
+  content(response, as = "parsed", encoding = "UTF-8")
 }
 
 get_realmID <- function(session){
@@ -42,7 +42,7 @@ get_quickbooks_accts <- function(access_token, realmID, intuit_url){
     paste0(intuit_url, realmID, "/query?query=", URLencode("select * from Account", reserved=T)),
     add_headers(Authorization = paste("Bearer", access_token))
   )
-  content <- content(response, as = "text")
+  content <- content(response, as = "text", encoding = "UTF-8")
   json_data <- fromJSON(content)
   
   # Format into data frame
@@ -55,7 +55,7 @@ get_quickbooks_vendors <- function(access_token, realmID, intuit_url){
     paste0(intuit_url, realmID, "/query?query=", URLencode("select * from Vendor", reserved=T)),
     add_headers(Authorization = paste("Bearer", access_token))
   )
-  content <- content(response, as = "text")
+  content <- content(response, as = "text", encoding = "UTF-8")
   json_data <- fromJSON(content)
   
   # Format into data frame
@@ -68,7 +68,7 @@ get_quickbooks_payment_methods <- function(access_token, realmID, intuit_url){
     paste0(intuit_url, realmID, "/query?query=", URLencode("select * from PaymentMethod", reserved=T)),
     add_headers(Authorization = paste("Bearer", access_token))
   )
-  content <- content(response, as = "text")
+  content <- content(response, as = "text", encoding = "UTF-8")
   json_data <- fromJSON(content)
   
   # Format into data frame
@@ -88,7 +88,7 @@ get_quickbooks_customers <- function(access_token, realmID, intuit_url, page_siz
       add_headers(Authorization = paste("Bearer", access_token))
     )
     
-    content <- content(response, as = "text")
+    content <- content(response, as = "text", encoding = "UTF-8")
     json_data <- fromJSON(content)
     # Format into data frame
     customers <- json_data$QueryResponse$Customer
@@ -117,7 +117,7 @@ get_quickbooks_items <- function(access_token, realmID, intuit_url){
     paste0(intuit_url, realmID, "/query?query=", URLencode("select * from Item", reserved=T)),
     add_headers(Authorization = paste("Bearer", access_token))
   )
-  content <- content(response, as = "text")
+  content <- content(response, as = "text", encoding = "UTF-8")
   json_data <- fromJSON(content)
   
   # Format into data frame
@@ -126,7 +126,7 @@ get_quickbooks_items <- function(access_token, realmID, intuit_url){
 }
 
 print_purchase_result <- function(response){
-  content <- content(response, as = "parsed")
+  content <- content(response, as = "parsed", encoding = "UTF-8")
   
   if (response$status_code == 200){
     print(paste("The following purchase was entered successfully:",
@@ -199,7 +199,7 @@ get_sales_result <- function(response, payment_method){
     return("Not entered in Quickbooks")
   }
   
-  content <- content(response, as = "parsed")
+  content <- content(response, as = "parsed", encoding = "UTF-8")
   
   if (response$status_code == 200){
     print(paste("The following sale was entered successfully:",
@@ -283,8 +283,6 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
     )
   )
   
-  print(toJSON(body, auto_unbox = TRUE))
-  
   # Post sales receipt
   res <- POST(
     url = url,
@@ -296,6 +294,9 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
     body = toJSON(body, auto_unbox = TRUE)
   )
   
+  # Print request body if unsuccessful
+  if (res$status_code != 200) print(toJSON(body, auto_unbox = TRUE))
+
   # Return result
   return(res)
 }
@@ -350,7 +351,7 @@ post_customer <- function(access_token, realm_id, intuit_url,
     ),
     body = toJSON(customer_data, auto_unbox = TRUE)
   )
-  content <- content(response, as = "parsed")
+  content <- content(response, as = "parsed", encoding = "UTF-8")
     
   # -----------------------------
   # Output Result
