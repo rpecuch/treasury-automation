@@ -174,7 +174,7 @@ server <- function(input, output, session) {
           customer_row <- which(tolower(customer_emails) == tolower(email))
           donor_id <- get_value(customers)$Id[customer_row]
           # Check if customer exists by name
-          if (length(customer_row) == 0){
+          if (length(customer_row) != 1){
             customer_name <- payment_details$billing_details$name
             customer_names <- unlist(get_value(customers)$DisplayName)
             customer_row <- which(tolower(customer_names) == tolower(customer_name))

@@ -1,0 +1,85 @@
+{
+ "QueryResponse": {
+  "Customer": [
+   {
+    "Taxable": true,
+    "BillAddr": {
+     "Id": "17330",
+     "Line1": "1019 3rd Pl SE",
+     "City": "Washington",
+     "Country": "US",
+     "CountrySubDivisionCode": "DC",
+     "PostalCode": "20003"
+    },
+    "Job": false,
+    "BillWithParent": false,
+    "Balance": 0,
+    "BalanceWithJobs": 0,
+    "CurrencyRef": {
+     "value": "USD",
+     "name": "United States Dollar"
+    },
+    "PreferredDeliveryMethod": "Print",
+    "IsProject": false,
+    "ClientEntityId": "0",
+    "domain": "QBO",
+    "sparse": false,
+    "Id": "5348",
+    "SyncToken": "0",
+    "MetaData": {
+     "CreateTime": "2026-06-17T06:58:15-07:00",
+     "LastUpdatedTime": "2026-06-17T06:58:15-07:00"
+    },
+    "FullyQualifiedName": "David Unterman",
+    "DisplayName": "David Unterman",
+    "PrintOnCheckName": "David Unterman",
+    "Active": true,
+    "V4IDPseudonym": "002119a9de53252a7d4c58a860b4b2bf8948d4",
+    "PrimaryEmailAddr": {
+     "Address": "du@daveanddaveteam.com"
+    }
+   },
+   {
+    "Taxable": true,
+    "BillAddr": {
+     "Id": "17064"
+    },
+    "ShipAddr": {
+     "Id": "17064"
+    },
+    "Job": false,
+    "BillWithParent": false,
+    "Balance": 0,
+    "BalanceWithJobs": 0,
+    "CurrencyRef": {
+     "value": "USD",
+     "name": "United States Dollar"
+    },
+    "PreferredDeliveryMethod": "Print",
+    "IsProject": false,
+    "ClientEntityId": "0",
+    "domain": "QBO",
+    "sparse": false,
+    "Id": "5314",
+    "SyncToken": "0",
+    "MetaData": {
+     "CreateTime": "2026-05-02T08:35:36-07:00",
+     "LastUpdatedTime": "2026-05-02T08:35:36-07:00"
+    },
+    "GivenName": "David",
+    "FamilyName": "Unterman",
+    "FullyQualifiedName": "Unterman, David",
+    "DisplayName": "Unterman, David",
+    "PrintOnCheckName": "Unterman, David",
+    "Active": true,
+    "V4IDPseudonym": "002119a3011f8e3c3542e7821d5936ee10c997",
+    "PrimaryEmailAddr": {
+     "Address": "du@daveanddaveteam.com"
+    }
+   }
+  ],
+  "startPosition": 1,
+  "maxResults": 2
+ },
+ "time": "2026-06-17T10:07:14.500-07:00"
+}
