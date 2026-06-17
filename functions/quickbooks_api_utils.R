@@ -274,87 +274,61 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
   return(res)
 }
 
+null_to_empty <- function(x) {
+  if (is.null(x)) "" else x
+}
+
 post_customer <- function(access_token, realm_id, intuit_url,
                           customer_name, email, phone, 
                           line1, line2, city, state, postal_code, country){
-  # tryCatch(expr ={
-    # -----------------------------
-    # Customer Data
-    # -----------------------------
-    customer_data <- list(
-      DisplayName = customer_name,
-      PrimaryEmailAddr = list(
-        Address = email
-      ),
-      PrimaryPhone = list(
-        FreeFormNumber = phone
-      ),
-      BillAddr = list(
-        Line1 = line1,
-        # Line2 = line2,
-        City = city,
-        CountrySubDivisionCode = state,
-        PostalCode = postal_code,
-        Country = country
-      )
+
+  # -----------------------------
+  # Customer Data
+  # -----------------------------
+  customer_data <- list(
+    DisplayName = customer_name,
+    PrimaryEmailAddr = list(
+      Address = null_to_empty(email)
+    ),
+    PrimaryPhone = list(
+      FreeFormNumber = null_to_empty(phone)
+    ),
+    BillAddr = list(
+      Line1 = null_to_empty(line1),
+      Line2 = null_to_empty(line2),
+      City = null_to_empty(city),
+      CountrySubDivisionCode = null_to_empty(state),
+      PostalCode = null_to_empty(postal_code),
+      Country = null_to_empty(country)
     )
-    
-    # -----------------------------
-    # QuickBooks Customer Endpoint
-    # -----------------------------
-    url <- paste0(
-      intuit_url,
-      realm_id,
-      "/customer"
-    )
-    # -----------------------------
-    # Create Customer
-    # -----------------------------
-    # Post sales receipt
-    print(customer_data)
-    response <- POST(
-      url = url,
-      add_headers(
-        Authorization = paste("Bearer", access_token),
-        Accept = "application/json",
-        "Content-Type" = "application/json"
-      ),
-      body = toJSON(customer_data, auto_unbox = TRUE)
-    )
-    content <- content(response, as = "parsed")
-    print(content)
-    stop()
-    
-    # response <- request(url)
-    # 
-    # response <- response |>
-    #   req_method("POST")
-    # 
-    # response <- response |>
-    #   req_headers(
-    #     Authorization = paste("Bearer", access_token),
-    #     Accept = "application/json",
-    #     `Content-Type` = "application/json"
-    #   )
-    # 
-    # response <- response |>
-    #   req_body_json(customer_data, auto_unbox = TRUE)
-    # 
-    # response <- response |>
-    #   req_perform()
-    
-    # -----------------------------
-    # Parse Response
-    # -----------------------------
-    # response_body <- resp_body_string(response)
-    # data <- fromJSON(response_body)
-  # }, 
-  # error = function(e){
-  #   print(paste("Error creating customer", customer_name, ":", e))
-  #   data <- list()
-  #   }
-  # )
+  )
   
+  # -----------------------------
+  # QuickBooks Customer Endpoint
+  # -----------------------------
+  url <- paste0(
+    intuit_url,
+    realm_id,
+    "/customer"
+  )
+  # -----------------------------
+  # Create Customer
+  # -----------------------------
+  # Post sales receipt
+  print(customer_data)
+  response <- POST(
+    url = url,
+    add_headers(
+      Authorization = paste("Bearer", access_token),
+      Accept = "application/json",
+      "Content-Type" = "application/json"
+    ),
+    body = toJSON(customer_data, auto_unbox = TRUE)
+  )
+  content <- content(response, as = "parsed")
+  print(content)
+  stop()
+    
   # -----------------------------
   # Output Result
   # -----------------------------
