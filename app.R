@@ -11,8 +11,14 @@ library(stringr)
 library(shinycssloaders)
 
 # R2 TODO:
+# all cardholder updates for Stripe need to be added to one of the sales transactions 
+  # if entered as expenses, cannot be matches with a bank deposit in quickbooks
 # modal/spinner during stripe progress
 # add fundraising keywords as well and if none present prompt me to categorize
+
+# Things to know for adding fundraise up
+# payout date would come from stripe because they are the payment processor
+# there are multiple deposits from fundraise up over the course of the month each with a few transactions
 
 # Load environmental vars
 if (Sys.getenv("APP_ENV") == "DEVELOPMENT"){
