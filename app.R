@@ -31,6 +31,7 @@ if (Sys.getenv("APP_ENV") != "production"){
 
 # Source UI and server
 source("functions/ui_utils.R")
+source("functions/server_modules.R")
 source("functions/quickbooks_api_utils.R")
 source("functions/stripe_api_utils.R")
 source("components/global_vars.R")

@@ -307,19 +307,7 @@ server <- function(input, output, session) {
   })
   
   # Download entered Stripe payments
-  output$download_stripe <- downloadHandler(
-    # Filename when user downloads
-    filename = function() {
-      paste0("entered_stripe_payments_", Sys.Date(), ".xlsx")
-    },
-
-    # File content
-    content = function(file) {
-      req(get_value(entered_stripe_payments))
-
-      write.xlsx(get_value(entered_stripe_payments), file, row.names = FALSE)
-    }
-  )
+  downloadServer("stripe", get_value(entered_stripe_payments))
   
   ## Expenses
   # Enter check

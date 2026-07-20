@@ -1,5 +1,7 @@
 # UI components
 makePaymentTab <- function(title, id){
+  ns <- NS(id)
+  
   tabPanel(title,
            # Allow user to choose when to look for payments
            dateRangeInput(
@@ -18,7 +20,8 @@ makePaymentTab <- function(title, id){
            withSpinner(verbatimTextOutput(paste0(id, "_result"))),
            # Download entered payments
            downloadButton(
-             outputId = paste0("download_", id),
+             # outputId = paste0("download-", id),
+             outputId = ns("download"),
              label = paste("Download Entered", title, "Payments")
            )
   )
