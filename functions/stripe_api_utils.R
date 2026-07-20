@@ -25,7 +25,7 @@ get_payouts <- function(stripe_api_key, start_date, end_date){
   data <- format_amt(data, "amount")
   
   # Filter and subset
-  data_paid <- data %>% filter(status == "paid" & 
+  data_paid <- data %>% dplyr::filter(status == "paid" & 
                                  arrival_date >= start_date & arrival_date <= end_date) %>%
     select(
       arrival_date, amount, id

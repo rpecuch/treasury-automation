@@ -1,3 +1,29 @@
+# UI components
+makePaymentTab <- function(title, id){
+  tabPanel(title,
+           # Allow user to choose when to look for payments
+           dateRangeInput(
+             inputId = paste0(id, "_date"),
+             label = "Bank Statement Dates:",
+             start = first_day_prev_month(),
+             end = last_day_prev_month()
+           ),
+           # Display payouts that will be entered
+           div(style = "width: 700px;",
+               h3(paste(title, "Payouts")),
+               DTOutput(paste0(id, "_payouts_table"))
+           ),
+           # Allow entering payments on demand
+           actionButton(id, paste("Enter", title, "Payments")),
+           withSpinner(verbatimTextOutput(paste0(id, "_result"))),
+           # Download entered payments
+           downloadButton(
+             outputId = paste0("download_", id),
+             label = paste("Download Entered", title, "Payments")
+           )
+  )
+}
+
 # Format/display data
 formatted_table <- function(df, pageLength=5){
   datatable(

@@ -1,3 +1,17 @@
+# in another file
+# myTabServer <- function(id) {
+#   moduleServer(id, function(input, output, session) {
+#     output$out <- renderPrint({
+#       input$text
+#     })
+#   })
+# }
+
+# server <- function(input, output, session) {
+#   myTabServer("tab1")
+#   myTabServer("tab2")
+# }
+
 # Define server
 server <- function(input, output, session) {
   
