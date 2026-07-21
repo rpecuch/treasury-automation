@@ -29,7 +29,7 @@ if (!shiny::isRunning()){
   stripe_payouts <- make_value(NULL)
   customers <- make_value(NULL)
   items <- make_value(NULL)
-  entered_stripe_payments <- make_value(NULL)
+  entered_payments <- make_value(NULL)
 } else{
   access_token <- reactiveVal(NULL)
   realmID <- reactiveVal(NULL)
@@ -39,5 +39,5 @@ if (!shiny::isRunning()){
   stripe_payouts <- reactiveVal(NULL)
   customers <- reactiveVal(NULL)
   items <- reactiveVal(NULL)
-  entered_stripe_payments <- reactiveVal(NULL)
+  entered_payments <- reactiveVal(NULL)
 }

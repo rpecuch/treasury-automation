@@ -22,233 +22,229 @@ enterPayments <- function(id, api_key){
     observeEvent(input$enter, {
       # Initialize entered payments
       if (!shiny::isRunning()){
-        entered_stripe_payments <- make_value(data.frame())
+        entered_payments <- make_value(data.frame())
       } else{
-        entered_stripe_payments(data.frame())
+        entered_payments(data.frame())
       }
       
       # Loop through payouts
       payout_data <- get_payouts(api_key, input$dates[1], input$dates[2])
-      req(payout_data)
-
-      for (i in seq_len(nrow(payout_data))){
-        # Retrieve payments
-        payout_id <- payout_data$id[i]
-        payments <- get_payout_charges(payout_id, stripe_api_key)
-
-        # Loop through payments
-        for (j in seq_len(nrow(payments)) ){
-          payment_type <- payments$type[j]
-          print(payment_type)
+      
+      # Check that authetntication has been done
+      if (nrow(payout_data) == 0){
+        message <- "No payouts to enter"
+      }
+      else if(is.null(get_value(access_token))){
+        message <- "Authenticate to Intuit first"
+      } else{
+        # Loop through payouts
+        for (i in seq_len(nrow(payout_data))){
+          # Retrieve payments
+          payout_id <- payout_data$id[i]
+          payments <- get_payout_charges(payout_id, api_key)
           
-          # TODO: remove after refactor
-          if (j == 1) break
-      #     
-      #     # Stripe cardholder updates fees - expenses
-      #     if (payment_type == "stripe_fee"){
-      #       # Enter expense
-      #       response <- post_purchase(
-      #         get_value(access_token), get_value(realmID), intuit_url,
-      #         payment_date = get_value(stripe_payouts)$arrival_date[i],
-      #         # Bank of America Checking account
-      #         acct_ref = expense_config$stripe$acct_ref,
-      #         payment_type = "Cash",
-      #         # Stripe Fee as vendor
-      #         vendor_id = expense_config$stripe$vendor_id,
-      #         payment_amt = abs(payments$amount[j]),
-      #         description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
-      #         # Stripe Fees account (expense account)
-      #         category_ref = expense_config$stripe$category_ref,
-      #         # Cash payment method
-      #         payment_method_id = expense_config$stripe$payment_method_id
-      #       )
-      #       
-      #       print_purchase_result(response)
-      #       
-      #       # Append row to table of entered stripe payments
-      #       status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
-      #       entered_details <- entered_payment_list(payout.date = get_value(stripe_payouts)$arrival_date[i],
-      #                                               payment.date = payments$available_on[j],
-      #                                               status = status,
-      #                                               sales.receipt.number = "N/A - expense",
-      #                                               description = payments$description[j],
-      #                                               amt = payments$amount[j],
-      #                                               fee = payments$fee[j],
-      #                                               net = payments$net[j],
-      #                                               donor = "N/A - expense",
-      #                                               email = NA, address = NA)
-      #       
-      #       if (!shiny::isRunning()){
-      #         entered_stripe_payments <- make_value(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       } else{
-      #         entered_stripe_payments(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       }
-      #       
-      #     }
-      #     
-      #     # Stripe payments + associated processing fees - sales
-      #     else if (payment_type == "charge"){
-      #       # Retrieve details
-      #       payment_id <- payments$source[j]
-      #       stripe_fee <- payments$fee[j]
-      #       payment_details <- get_charge_details(payment_id, stripe_api_key)
-      #       
-      #       # If no IMO metadata, check line items on checkout session
-      #       if (length(payment_details$metadata) == 0){
-      #         checkout_id <- get_checkout_session(payment_details$payment_intent, stripe_api_key)
-      #         product_id <- get_product_id(checkout_id, stripe_api_key)
-      #         payment_desc <- get_product_desc(product_id, stripe_api_key)
-      #         payment_desc <- paste("Stripe -", payment_desc)
-      #       } else{
-      #         payment_desc <- paste("Stripe -", payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
-      #       }
-      #       
-      #       # Categorize as fundraiser or memorial donation
-      #       payment_cat <- ifelse(str_detect(tolower(payment_desc), memorial_pattern), "item_positive_memorial", "item_positive_fundraiser")
-      #       
-      #       # Check if customer (donor) exists by email
-      #       email <- payment_details$billing_details$email
-      #       customer_emails <- unlist(get_value(customers)$PrimaryEmailAddr)
-      #       customer_row <- which(tolower(customer_emails) == tolower(email))
-      #       donor_id <- get_value(customers)$Id[customer_row]
-      #       # Check if customer exists by name
-      #       if (length(customer_row) != 1){
-      #         customer_name <- payment_details$billing_details$name
-      #         customer_names <- unlist(get_value(customers)$DisplayName)
-      #         customer_row <- which(tolower(customer_names) == tolower(customer_name))
-      #         donor_id <- get_value(customers)$Id[customer_row]
-      #         
-      #         # Create new customer
-      #         if (length(customer_row) == 0){
-      #           donor_id <- post_customer(get_value(access_token), get_value(realmID), intuit_url,
-      #                                     customer_name = customer_name, email = email, phone = payment_details$billing_details$phone,
-      #                                     line1 = payment_details$billing_details$address$line1,
-      #                                     line2 = payment_details$billing_details$address$line2,
-      #                                     city = payment_details$billing_details$address$city,
-      #                                     state = payment_details$billing_details$address$state, postal_code = payment_details$billing_details$address$postal_code,
-      #                                     country = payment_details$billing_details$address$country)
-      #           # Retrieve updated customer list
-      #           if (!shiny::isRunning()){
-      #             customers <- make_value(get_quickbooks_customers(get_value(access_token), get_value(realmID), intuit_url))
-      #           } else{
-      #             customers(get_quickbooks_customers(get_value(access_token), get_value(realmID), intuit_url))
-      #           }
-      #         }
-      #       }
-      #       
-      #       # Form billing address
-      #       billing_address <- paste0(
-      #         payment_details$billing_details$address$line1, payment_details$billing_details$address$line2,
-      #         ", ", payment_details$billing_details$address$city, ", ", payment_details$billing_details$address$state,
-      #         ", ", payment_details$billing_details$address$country, ", ", payment_details$billing_details$address$postal_code
-      #       )
-      #       
-      #       # Enter payment
-      #       # Payment ID shown in Stripe UI corresponds to payment_intent field from API
-      #       response <- post_sale(get_value(access_token), get_value(realmID), intuit_url,
-      #                             payment_date = get_value(stripe_payouts)$arrival_date[i], # Date of payout
-      #                             donor_id = donor_id, # comes from Customers
-      #                             donor_email = email,
-      #                             # Stripe payment method
-      #                             payment_method_id = payment_config$stripe$payment_method_id, # comes from Payment Methods
-      #                             # Bank of America checking
-      #                             deposit_account_id = payment_config$stripe$deposit_account_id, # comes from Accounts, must be of type Bank
-      #                             billing_address = billing_address,
-      #                             shipping_date = payment_details$created,
-      #                             amount_positive = payment_details$amount,
-      #                             description_positive = payment_desc,
-      #                             # Honor/memorial gift
-      #                             item_positive_id = payment_config$stripe[[payment_cat]], # comes from Items, should indicate memorial/honoratum gift
-      #                             amount_negative = stripe_fee,
-      #                             description_negative = "Stripe Processing Fee",
-      #                             # Stripe processing charge
-      #                             item_negative_id = payment_config$stripe$item_negative_id # comes from Items, should inidcate process change from stripe
-      #       )
-      #       
-      #       # Print result
-      #       sale_no <- get_sales_result(response, "Stripe")
-      #       
-      #       # Append row to table of entered stripe payments
-      #       status <- "Not Entered - Automation Failure"
-      #       if (!is.null(response)){
-      #         if (response$status_code == 200) status <- "Entered Successfully"
-      #       }
-      #       
-      #       entered_details <- entered_payment_list(payout.date = get_value(stripe_payouts)$arrival_date[i],
-      #                                               payment.date = payment_details$created,
-      #                                               status = status,
-      #                                               sales.receipt.number = sale_no,
-      #                                               description = payment_desc,
-      #                                               amt = payment_details$amount,
-      #                                               fee = stripe_fee,
-      #                                               net = payment_details$amount - stripe_fee,
-      #                                               donor = payment_details$billing_details$name,
-      #                                               email = email, address = billing_address)
-      #       
-      #       if (!shiny::isRunning()){
-      #         entered_stripe_payments <- make_value(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       } else{
-      #         entered_stripe_payments(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       }
-      #       
-      #     }
-      #     
-      #     else{
-      #       # Handling for unknown payment types
-      #       entered_details <- entered_payment_list(payout.date = get_value(stripe_payouts)$arrival_date[i],
-      #                                               payment.date = payments$available_on[j],
-      #                                               status = "Not Entered - Unknown Type",
-      #                                               sales.receipt.number = NA,
-      #                                               description = paste("Unknown payment type:", payment_type),
-      #                                               amt = payments$amount[j],
-      #                                               fee = payments$fee[j],
-      #                                               net = payments$net[j],
-      #                                               donor = NA,
-      #                                               email = NA, address = NA)
-      #       
-      #       if (!shiny::isRunning()){
-      #         entered_stripe_payments <- make_value(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       } else{
-      #         entered_stripe_payments(add_row_from_list(get_value(entered_stripe_payments), entered_details))
-      #       }
-      #     }
-      #     
-        }
-      }
-      
-      # Create result message
-      # all_successful <- all(get_value(entered_stripe_payments)$QuickBooks.Status == "Entered Successfully")
-      # stripe_message <- ifelse(all_successful,
-      #                          "All Stripe transactions from displayed payouts entered in QuickBooks successfully! Download file to see details.",
-      #                          "Some Stripe transactions from displayed payouts were NOT entered in QuickBooks successfully. Download file to see details.")
-      # 
-      # # Show in UI when completed
-      # output$stripe_result <- renderPrint({
-      #   # Sys.sleep(1)
-      #   
-      #   stripe_message
-      # })
-    })
-  })
-}
+          # Loop through payments
+          for (j in seq_len(nrow(payments)) ){
+            payment_type <- payments$type[j]
+            
+            # Stripe cardholder updates fees - expenses
+            if (payment_type == "stripe_fee"){
+              # Enter expense
+              response <- post_purchase(
+                get_value(access_token), get_value(realmID), intuit_url,
+                payment_date = payout_data$arrival_date[i],
+                # Bank of America Checking account
+                acct_ref = expense_config[[id]]$acct_ref,
+                payment_type = "Cash",
+                # Stripe Fee as vendor
+                vendor_id = expense_config[[id]]$vendor_id,
+                payment_amt = abs(payments$amount[j]),
+                description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
+                # Stripe Fees account (expense account)
+                category_ref = expense_config[[id]]$category_ref,
+                # Cash payment method
+                payment_method_id = expense_config[[id]]$payment_method_id
+              )
+              
+              print_purchase_result(response)
+              
+              # Append row to table of entered stripe payments
+              status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
+              entered_details <- entered_payment_list(payout.date = payout_data$arrival_date[i],
+                                                      payment.date = payments$available_on[j],
+                                                      status = status,
+                                                      sales.receipt.number = "N/A - expense",
+                                                      description = payments$description[j],
+                                                      amt = payments$amount[j],
+                                                      fee = payments$fee[j],
+                                                      net = payments$net[j],
+                                                      donor = "N/A - expense",
+                                                      email = NA, address = NA)
+              
+            }
+            
+                # Stripe payments + associated processing fees - sales
+                else if (payment_type == "charge"){
+                  # Retrieve details
+                  payment_id <- payments$source[j]
+                  stripe_fee <- payments$fee[j]
+                  payment_details <- get_charge_details(payment_id, api_key)
 
-# File download
-downloadServer <- function(id, data) {
-  moduleServer(id, function(input, output, session) {
-    # Download entered payments
-    output$download <- downloadHandler(
-      # Filename when user downloads
-      filename = function() {
-        paste0("entered_",id, "_payments_", Sys.Date(), ".xlsx")
-      },
-      
-      # File content
-      content = function(file) {
-        # Handle blank value
-        content_to_write <- ifelse(is.null(data), data.frame(), data)
+                  # If no IMO metadata, check line items on checkout session
+                  if (length(payment_details$metadata) == 0){
+                    checkout_id <- get_checkout_session(payment_details$payment_intent, api_key)
+                    product_id <- get_product_id(checkout_id, api_key)
+                    payment_desc <- get_product_desc(product_id, api_key)
+                    payment_desc <- paste("Stripe -", payment_desc)
+                  } else{
+                    payment_desc <- paste("Stripe -", payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
+                  }
+
+                  # Categorize as fundraiser or memorial donation
+                  payment_cat <- ifelse(str_detect(tolower(payment_desc), memorial_pattern), "item_positive_memorial", "item_positive_fundraiser")
+
+                  # Check if customer (donor) exists by email
+                  email <- payment_details$billing_details$email
+                  customer_emails <- unlist(get_value(customers)$PrimaryEmailAddr)
+                  customer_row <- which(tolower(customer_emails) == tolower(email))
+                  donor_id <- get_value(customers)$Id[customer_row]
+                  # Check if customer exists by name
+                  if (length(customer_row) != 1){
+                    customer_name <- payment_details$billing_details$name
+                    customer_names <- unlist(get_value(customers)$DisplayName)
+                    customer_row <- which(tolower(customer_names) == tolower(customer_name))
+                    donor_id <- get_value(customers)$Id[customer_row]
+
+                    # Create new customer
+                    if (length(customer_row) == 0){
+                      donor_id <- post_customer(get_value(access_token), get_value(realmID), intuit_url,
+                                                customer_name = customer_name, email = email, phone = payment_details$billing_details$phone,
+                                                line1 = payment_details$billing_details$address$line1,
+                                                line2 = payment_details$billing_details$address$line2,
+                                                city = payment_details$billing_details$address$city,
+                                                state = payment_details$billing_details$address$state, postal_code = payment_details$billing_details$address$postal_code,
+                                                country = payment_details$billing_details$address$country)
+                      # Retrieve updated customer list
+                      if (!shiny::isRunning()){
+                        customers <- make_value(get_quickbooks_customers(get_value(access_token), get_value(realmID), intuit_url))
+                      } else{
+                        customers(get_quickbooks_customers(get_value(access_token), get_value(realmID), intuit_url))
+                      }
+                    }
+                  }
+
+                  # Form billing address
+                  billing_address <- paste0(
+                    payment_details$billing_details$address$line1, payment_details$billing_details$address$line2,
+                    ", ", payment_details$billing_details$address$city, ", ", payment_details$billing_details$address$state,
+                    ", ", payment_details$billing_details$address$country, ", ", payment_details$billing_details$address$postal_code
+                  )
+
+                  # Enter payment
+                  # Payment ID shown in Stripe UI corresponds to payment_intent field from API
+                  response <- post_sale(get_value(access_token), get_value(realmID), intuit_url,
+                                        payment_date = get_value(payout_data)$arrival_date[i], # Date of payout
+                                        donor_id = donor_id, # comes from Customers
+                                        donor_email = email,
+                                        # Stripe payment method
+                                        payment_method_id = payment_config[[id]]$payment_method_id, # comes from Payment Methods
+                                        # Bank of America checking
+                                        deposit_account_id = payment_config[[id]]$deposit_account_id, # comes from Accounts, must be of type Bank
+                                        billing_address = billing_address,
+                                        shipping_date = payment_details$created,
+                                        amount_positive = payment_details$amount,
+                                        description_positive = payment_desc,
+                                        # Honor/memorial gift
+                                        item_positive_id = payment_config[[id]][[payment_cat]], # comes from Items, should indicate memorial/honoratum gift
+                                        amount_negative = stripe_fee,
+                                        description_negative = "Stripe Processing Fee",
+                                        # Stripe processing charge
+                                        item_negative_id = payment_config[[id]]$item_negative_id # comes from Items, should inidcate process change from stripe
+                  )
+
+                  # Print result
+                  sale_no <- get_sales_result(response, "Stripe")
+
+                  # Append row to table of entered stripe payments
+                  status <- "Not Entered - Automation Failure"
+                  if (!is.null(response)){
+                    if (response$status_code == 200) status <- "Entered Successfully"
+                  }
+
+                  entered_details <- entered_payment_list(payout.date = get_value(payout_data)$arrival_date[i],
+                                                          payment.date = payment_details$created,
+                                                          status = status,
+                                                          sales.receipt.number = sale_no,
+                                                          description = payment_desc,
+                                                          amt = payment_details$amount,
+                                                          fee = stripe_fee,
+                                                          net = payment_details$amount - stripe_fee,
+                                                          donor = payment_details$billing_details$name,
+                                                          email = email, address = billing_address)
+
+
+                }
+            
+                else{
+                  # Handling for unknown payment types
+                  entered_details <- entered_payment_list(payout.date = get_value(payout_data)$arrival_date[i],
+                                                          payment.date = payments$available_on[j],
+                                                          status = "Not Entered - Unknown Type",
+                                                          sales.receipt.number = NA,
+                                                          description = paste("Unknown payment type:", payment_type),
+                                                          amt = payments$amount[j],
+                                                          fee = payments$fee[j],
+                                                          net = payments$net[j],
+                                                          donor = NA,
+                                                          email = NA, address = NA)
+
+                }
+            
+            # Add payment to payments table
+            if (!shiny::isRunning()){
+              entered_payments <- make_value(add_row_from_list(get_value(entered_payments), entered_details))
+            } else{
+              entered_payments(add_row_from_list(get_value(entered_payments), entered_details))
+            }
+            # TODO: remove after refactor
+            if (j == 6) break
+
+          }
+        }
         
-        write.xlsx(content_to_write, file, row.names = FALSE)
+        # Create result message
+        all_successful <- all(get_value(entered_payments)$QuickBooks.Status == "Entered Successfully")
+        message <- ifelse(all_successful,
+                                 paste(
+                                   "All", id, "from displayed payouts entered in QuickBooks successfully! Download file to see details."
+                                 ),
+                                 paste(
+                                   "Some", id, "from displayed payouts were NOT entered in QuickBooks successfully. Download file to see details."
+                                 )
+                               )
+
       }
-    )
+      
+      # Show in UI when completed
+      output$result <- renderPrint({
+        message
+      })
+      
+      # Download entered payments
+      print(class(get_value(entered_payments)))
+      output$download <- downloadHandler(
+        # Filename when user downloads
+        filename = function() {
+          paste0("entered_",id, "_payments_", Sys.Date(), ".xlsx")
+        },
+        
+        # File content
+        content = function(file) {
+          req(get_value(entered_payments))
+          
+          write.xlsx(get_value(entered_payments), file, row.names = FALSE)
+        }
+      )
+    })
   })
 }
