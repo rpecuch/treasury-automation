@@ -62,7 +62,7 @@ enterPayments <- function(id, api_key){
                 description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
                 # Stripe Fees account (expense account)
                 category_ref = expense_config[[id]]$category_ref,
-                # Cash payment method
+                # Stripe payment method
                 payment_method_id = expense_config[[id]]$payment_method_id
               )
               

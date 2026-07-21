@@ -5,5 +5,13 @@
     "item_positive_memorial": "20",
     "item_positive_fundraiser": "21",
     "payment_method_id": "8"
+  },
+  "fundraise_up": {
+    "deposit_account_id": "1150040000",
+    "item_negative_id": "19",
+    "item_positive_memorial": "20",
+    "item_positive_fundraiser": "21",
+    "item_positive_individual": "1",
+    "payment_method_id": "8"
   }
 }
