@@ -5,7 +5,7 @@ makePaymentTab <- function(title, id){
   tabPanel(title,
            # Allow user to choose when to look for payments
            dateRangeInput(
-             inputId = paste0(id, "_date"),
+             inputId = ns("dates"),
              label = "Bank Statement Dates:",
              start = first_day_prev_month(),
              end = last_day_prev_month()
@@ -13,14 +13,13 @@ makePaymentTab <- function(title, id){
            # Display payouts that will be entered
            div(style = "width: 700px;",
                h3(paste(title, "Payouts")),
-               DTOutput(paste0(id, "_payouts_table"))
+               DTOutput(ns("payouts_table"))
            ),
            # Allow entering payments on demand
-           actionButton(id, paste("Enter", title, "Payments")),
-           withSpinner(verbatimTextOutput(paste0(id, "_result"))),
+           actionButton(ns("enter"), paste("Enter", title, "Payments")),
+           withSpinner(verbatimTextOutput(ns("result"))),
            # Download entered payments
            downloadButton(
-             # outputId = paste0("download-", id),
              outputId = ns("download"),
              label = paste("Download Entered", title, "Payments")
            )

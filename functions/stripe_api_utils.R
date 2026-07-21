@@ -30,6 +30,7 @@ get_payouts <- function(stripe_api_key, start_date, end_date){
     select(
       arrival_date, amount, id
     )
+
   return(data_paid)
 }
 
