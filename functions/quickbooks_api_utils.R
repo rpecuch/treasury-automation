@@ -360,7 +360,7 @@ post_customer <- function(access_token, realm_id, intuit_url,
     cat("Customer created successfully.\n")
     
     # Print created customer info
-    print(content$Customer$DisplayName)
+    cat(content$Customer$DisplayName)
     return(content$Customer$Id)
   } else {
     print("Failed to create customer.\n")

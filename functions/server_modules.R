@@ -43,43 +43,56 @@ enterPayments <- function(id, api_key){
           payout_id <- payout_data$id[i]
           payments <- get_payout_charges(payout_id, api_key)
           
+          # Store cardholder update fees
+          cau_fees <- data.frame()
+          
           # Loop through payments
           for (j in seq_len(nrow(payments)) ){
             payment_type <- payments$type[j]
             
             # Stripe cardholder updates fees - expenses
             if (payment_type == "stripe_fee"){
-              # Enter expense
-              response <- post_purchase(
-                get_value(access_token), get_value(realmID), intuit_url,
-                payment_date = payout_data$arrival_date[i],
-                # Bank of America Checking account
-                acct_ref = expense_config[[id]]$acct_ref,
-                payment_type = "Cash",
-                # Stripe Fee as vendor
-                vendor_id = expense_config[[id]]$vendor_id,
+              # Extract needed info
+              cau_info <- list(
                 payment_amt = abs(payments$amount[j]),
-                description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
-                # Stripe Fees account (expense account)
-                category_ref = expense_config[[id]]$category_ref,
-                # Stripe payment method
-                payment_method_id = expense_config[[id]]$payment_method_id
+                description = payments$description[j]
               )
               
-              print_purchase_result(response)
+              # TODO: add info to cau_fees
+              # TODO: on last iteration of loop, add all the cau_fees as additional negative charges on the payment
+              # TODO: add records to entered_payments df but indicate where they can be found
               
-              # Append row to table of entered stripe payments
-              status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
-              entered_details <- entered_payment_list(payout.date = payout_data$arrival_date[i],
-                                                      payment.date = payments$available_on[j],
-                                                      status = status,
-                                                      sales.receipt.number = "N/A - expense",
-                                                      description = payments$description[j],
-                                                      amt = payments$amount[j],
-                                                      fee = payments$fee[j],
-                                                      net = payments$net[j],
-                                                      donor = "N/A - expense",
-                                                      email = NA, address = NA)
+              # Enter expense
+              # response <- post_purchase(
+              #   get_value(access_token), get_value(realmID), intuit_url,
+              #   payment_date = payout_data$arrival_date[i],
+              #   # Bank of America Checking account
+              #   acct_ref = expense_config[[id]]$acct_ref,
+              #   payment_type = "Cash",
+              #   # Stripe Fee as vendor
+              #   vendor_id = expense_config[[id]]$vendor_id,
+              #   payment_amt = abs(payments$amount[j]),
+              #   description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
+              #   # Stripe Fees account (expense account)
+              #   category_ref = expense_config[[id]]$category_ref,
+              #   # Stripe payment method
+              #   payment_method_id = expense_config[[id]]$payment_method_id
+              # )
+              # 
+              # print_purchase_result(response)
+              # 
+              # # Append row to table of entered stripe payments
+              # status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
+              # entered_details <- entered_payment_list(payout.date = payout_data$arrival_date[i],
+              #                                         payment.date = payments$available_on[j],
+              #                                         status = status,
+              #                                         sales.receipt.number = "N/A - expense",
+              #                                         description = payments$description[j],
+              #                                         amt = payments$amount[j],
+              #                                         fee = payments$fee[j],
+              #                                         net = payments$net[j],
+              #                                         donor = "N/A - expense",
+              #                                         email = NA, address = NA)
               
             }
             
@@ -231,7 +244,6 @@ enterPayments <- function(id, api_key){
       })
       
       # Download entered payments
-      print(class(get_value(entered_payments)))
       output$download <- downloadHandler(
         # Filename when user downloads
         filename = function() {
