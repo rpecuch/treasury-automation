@@ -10,8 +10,9 @@ if (Sys.getenv("APP_ENV") == "DEVELOPMENT"){
   intuit_url <- "https://quickbooks.api.intuit.com/v3/company/"
 }
 
-# API keyss
+# API keys
 stripe_api_key <- Sys.getenv("STRIPE_API_KEY")
+fru_stripe_api_key <- Sys.getenv("FRU_STRIPE_API_KEY")
 
 # Configurable inputs for expense and payment entries
 if (Sys.getenv("APP_ENV") == "DEVELOPMENT"){

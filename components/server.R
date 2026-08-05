@@ -65,18 +65,20 @@ server <- function(input, output, session) {
     }
   })
   
-  ## Sales transactions
+  ## Stripe
   
   # Display Stripe payouts
   # Stripe payouts are 26th of every month (or next day if holiday or something), but dates are retrieved via API
   # Bank statement will just show payout total
   displayPayouts("stripe", stripe_api_key)
   
-  # TODO: Retrieve and display Fundraise Up payouts
-  # displayPayouts("fundraise_up", stripe_api_key)
-
   # Enter payments received from Stripe
   enterPayments("stripe", stripe_api_key)
+  
+  ## Fundraise Up
+  
+  # Retrieve and display Fundraise Up payouts
+  displayPayouts("fundraise_up", fru_stripe_api_key)
   
   # TODO: Enter payments received from Fundraise Up dashboard
   # enterPayments("fundraise_up", stripe_api_key)
