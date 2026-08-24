@@ -110,20 +110,26 @@ enterPayments <- function(id, api_key){
                     payment_desc <- get_product_desc(product_id, api_key)
                     payment_desc <- paste("Stripe -", payment_desc)
                   } else{
-                    payment_desc <- paste("Stripe -", payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
+                    if ("Campaign Name" %in% names(payment_details$metadata)){
+                      payment_desc <- paste("FRU -", payment_details$metadata$`Campaign Name`)
+                    } else{
+                      payment_desc <- paste("Stripe -", payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
+                    }
                   }
 
                   # Categorize as fundraiser or memorial donation
                   payment_cat <- ifelse(str_detect(tolower(payment_desc), memorial_pattern), "item_positive_memorial", "item_positive_fundraiser")
 
                   # Check if customer (donor) exists by email
-                  email <- payment_details$billing_details$email
+                  email <- ifelse(id == "fundraise_up", payment_details$metadata$`Supporter Email`, payment_details$billing_details$email)
+                  # email <- payment_details$billing_details$email
                   customer_emails <- unlist(get_value(customers)$PrimaryEmailAddr)
                   customer_row <- which(tolower(customer_emails) == tolower(email))
                   donor_id <- get_value(customers)$Id[customer_row]
                   # Check if customer exists by name
                   if (length(customer_row) != 1){
-                    customer_name <- payment_details$billing_details$name
+                    customer_name <- ifelse(id == "fundraise_up", paste(payment_details$metadata$`Supporter First Name`, payment_details$metadata$`Supporter Last Name`), 
+                                                                        payment_details$billing_details$name)
                     customer_names <- unlist(get_value(customers)$DisplayName)
                     customer_row <- which(tolower(customer_names) == tolower(customer_name))
                     donor_id <- get_value(customers)$Id[customer_row]
