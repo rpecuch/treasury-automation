@@ -28,7 +28,11 @@ enterPayments <- function(id, api_key){
       }
       
       # Loop through payouts
-      payout_data <- get_payouts(api_key, input$dates[1], input$dates[2])
+      if (!shiny::isRunning()){
+        payout_data <- get_payouts(fru_stripe_api_key, "2026-07-01", "2026-07-31")
+      } else{
+        payout_data <- get_payouts(api_key, input$dates[1], input$dates[2])
+      }
       
       # Check that authetntication has been done
       if (nrow(payout_data) == 0){
@@ -122,14 +126,14 @@ enterPayments <- function(id, api_key){
 
                   # Check if customer (donor) exists by email
                   email <- ifelse(id == "fundraise_up", payment_details$metadata$`Supporter Email`, payment_details$billing_details$email)
-                  # email <- payment_details$billing_details$email
+                  customer_name <- ifelse(id == "fundraise_up", paste(payment_details$metadata$`Supporter First Name`, payment_details$metadata$`Supporter Last Name`), 
+                                          payment_details$billing_details$name)
+                 
                   customer_emails <- unlist(get_value(customers)$PrimaryEmailAddr)
                   customer_row <- which(tolower(customer_emails) == tolower(email))
                   donor_id <- get_value(customers)$Id[customer_row]
                   # Check if customer exists by name
                   if (length(customer_row) != 1){
-                    customer_name <- ifelse(id == "fundraise_up", paste(payment_details$metadata$`Supporter First Name`, payment_details$metadata$`Supporter Last Name`), 
-                                                                        payment_details$billing_details$name)
                     customer_names <- unlist(get_value(customers)$DisplayName)
                     customer_row <- which(tolower(customer_names) == tolower(customer_name))
                     donor_id <- get_value(customers)$Id[customer_row]
@@ -182,7 +186,7 @@ enterPayments <- function(id, api_key){
                   )
 
                   # Print result
-                  sale_no <- get_sales_result(response, "Stripe")
+                  sale_no <- get_sales_result(response, id)
 
                   # Append row to table of entered stripe payments
                   status <- "Not Entered - Automation Failure"
@@ -198,7 +202,7 @@ enterPayments <- function(id, api_key){
                                                           amt = payment_details$amount,
                                                           fee = stripe_fee,
                                                           net = payment_details$amount - stripe_fee,
-                                                          donor = payment_details$billing_details$name,
+                                                          donor = customer_name,
                                                           email = email, address = billing_address)
 
 
@@ -225,8 +229,6 @@ enterPayments <- function(id, api_key){
             } else{
               entered_payments(add_row_from_list(get_value(entered_payments), entered_details))
             }
-            # TODO: remove after refactor
-            if (j == 6) break
 
           }
         }

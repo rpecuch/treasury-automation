@@ -11,7 +11,7 @@ library(stringr)
 library(shinycssloaders)
 
 # R2 TODO:
-# all cardholder updates for Stripe need to be added to one of the sales transactions - verify with Mitch after meeting about May recon issues
+# all cardholder updates for Stripe need to be added to one of the sales transactions
   # if entered as expenses, cannot be matches with a bank deposit in quickbooks
 # FRU updates
 # modal/spinner during stripe progress
