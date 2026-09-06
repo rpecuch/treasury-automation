@@ -20,14 +20,16 @@ displayPayouts <- function(id, api_key){
 enterPayments <- function(id, api_key){
   moduleServer(id, function(input, output, session){
     observeEvent(input$enter, {
-      # Initialize entered payments
+      # Initialize payments to enter
       payments_to_enter <- data.frame()
       unexpected_payments <- data.frame()
-      # if (!shiny::isRunning()){
-      #   entered_payments <- make_value(data.frame())
-      # } else{
-      #   entered_payments(data.frame())
-      # }
+      
+      # Initialize entered payments
+      if (!shiny::isRunning()){
+        entered_payments <- make_value(data.frame())
+      } else{
+        entered_payments(data.frame())
+      }
       
       # Loop through payouts
       if (!shiny::isRunning()){
@@ -67,7 +69,8 @@ enterPayments <- function(id, api_key){
                   ItemRef = list(
                     value = payment_config[[id]]$item_negative_id
                   )
-                )
+                ),
+                payment_date = payments$created[j]
               )
               
               # Add info to cau_fees
@@ -153,7 +156,8 @@ enterPayments <- function(id, api_key){
                     item_positive_id = payment_config[[id]][[payment_cat]],
                     amount_negative = stripe_fee,
                     description_negative = "Stripe Processing Fee",
-                    item_negative_id = payment_config[[id]]$item_negative_id
+                    item_negative_id = payment_config[[id]]$item_negative_id,
+                    customer_name = customer_name
                   )
                   payments_to_enter <- add_row_from_list(payments_to_enter, details_to_enter)
 
@@ -174,58 +178,6 @@ enterPayments <- function(id, api_key){
                   unexpected_payments <- add_row_from_list(unexpected_payments, unexpected_payment)
 
                 }
-            
-            # entered_details <- entered_payment_list(payout.date = get_value(payout_data)$arrival_date[i],
-            #                                         payment.date = payment_details$created,
-            #                                         status = status,
-            #                                         sales.receipt.number = sale_no,
-            #                                         description = payment_desc,
-            #                                         amt = payment_details$amount,
-            #                                         fee = stripe_fee,
-            #                                         net = payment_details$amount - stripe_fee,
-            #                                         donor = customer_name,
-            #                                         email = email, address = billing_address)
-            
-            # Add payment to payments table
-            # if (payment_type != "stripe_fee"){
-            #   if (!shiny::isRunning()){
-            #     entered_payments <- make_value(add_row_from_list(get_value(entered_payments), entered_details))
-            #   } else{
-            #     entered_payments(add_row_from_list(get_value(entered_payments), entered_details))
-            #   }
-            # }
-            
-            # Enter expense
-            # response <- post_purchase(
-            #   get_value(access_token), get_value(realmID), intuit_url,
-            #   payment_date = payout_data$arrival_date[i],
-            #   # Bank of America Checking account
-            #   acct_ref = expense_config[[id]]$acct_ref,
-            #   payment_type = "Cash",
-            #   # Stripe Fee as vendor
-            #   vendor_id = expense_config[[id]]$vendor_id,
-            #   payment_amt = abs(payments$amount[j]),
-            #   description = paste("Stripe-", payments$description[j], ". Accounted for in payout to bank account."),
-            #   # Stripe Fees account (expense account)
-            #   category_ref = expense_config[[id]]$category_ref,
-            #   # Stripe payment method
-            #   payment_method_id = expense_config[[id]]$payment_method_id
-            # )
-            # 
-            # print_purchase_result(response)
-            # 
-            # # Append row to table of entered stripe payments
-            # status <- ifelse(response$status_code == 200, "Entered Successfully", "Not Entered - Automation Failure")
-            # entered_details <- entered_payment_list(payout.date = payout_data$arrival_date[i],
-            #                                         payment.date = payments$available_on[j],
-            #                                         status = status,
-            #                                         sales.receipt.number = "N/A - expense",
-            #                                         description = payments$description[j],
-            #                                         amt = payments$amount[j],
-            #                                         fee = payments$fee[j],
-            #                                         net = payments$net[j],
-            #                                         donor = "N/A - expense",
-            #                                         email = NA, address = NA)
 
           }
         }
@@ -250,6 +202,11 @@ enterPayments <- function(id, api_key){
           cau_update_fees <- NULL
           if (k == first_match){
             cau_update_fees <- cau_fees
+            cau_update_fees <- lapply(cau_fees, function(x) {
+              x[["payment_date"]] <- NULL
+              x
+            })
+            
           }
           
           # Enter payment
@@ -273,14 +230,58 @@ enterPayments <- function(id, api_key){
           # Print result
           sale_no <- get_sales_result(response, id)
 
-          # # Append row to table of entered stripe payments
-          # status <- "Not Entered - Automation Failure"
-          # if (!is.null(response)){
-          #   if (response$status_code == 200) status <- "Entered Successfully"
-          # }
+          # Get status
+          status <- "Not Entered - Automation Failure"
+          if (!is.null(response)){
+            if (response$status_code == 200) status <- "Entered Successfully"
+          }
+          
+          # Compile details for output
+          entered_details <- entered_payment_list(payout.date = payment_row$payment_date,
+                                                  payment.date = payment_row$shipping_date,
+                                                  status = status,
+                                                  sales.receipt.number = sale_no,
+                                                  description = payment_row$description_positive,
+                                                  amt = payment_row$amount_positive,
+                                                  fee = payment_row$amount_negative,
+                                                  net = payment_row$amount_positive - payment_row$amount_negative,
+                                                  donor = payment_row$customer_name,
+                                                  email = payment_row$donor_email, address = payment_row$billing_address)
+          
+          # Add payment to payments table
+          if (!shiny::isRunning()){
+            entered_payments <- make_value(add_row_from_list(get_value(entered_payments), entered_details))
+          } else{
+            entered_payments(add_row_from_list(get_value(entered_payments), entered_details))
+          }
+          
+          # Add CAU fees if applicable
+          if (k == first_match){
+            for (cau_fee in cau_fees){
+              entered_fees <- entered_payment_list(payout.date = payout_data$arrival_date[i],
+                                                      payment.date = cau_fee$payment_date,
+                                                      status = status,
+                                                      sales.receipt.number = sale_no,
+                                                      description = cau_fee$Description,
+                                                      amt = cau_fee$Amount,
+                                                      fee = NA,
+                                                      net = cau_fee$Amount,
+                                                      donor = NA,
+                                                      email = NA, address = NA)
+              
+              
+              # Add to payments table
+              if (!shiny::isRunning()){
+                entered_payments <- make_value(add_row_from_list(get_value(entered_payments), entered_fees))
+              } else{
+                entered_payments(add_row_from_list(get_value(entered_payments), entered_fees))
+              }
+            }
+            
+          }
         }
         
-        # TODO: create data frame for output, and indicate where cau_fees may be found
+        # TODO: add unexpected types
         
         # Create result message
         all_successful <- all(get_value(entered_payments)$QuickBooks.Status == "Entered Successfully")

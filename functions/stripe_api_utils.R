@@ -57,6 +57,7 @@ get_payout_charges <- function(payout_id, stripe_api_key){
   charges <- transactions[transactions$type != "payout", ]
   # Format
   charges <- convert_to_posix(charges, "available_on")
+  charges <- convert_to_posix(charges, "created")
   charges <- format_amt(charges, "amount")
   charges <- format_amt(charges, "fee")
   charges <- format_amt(charges, "net")
