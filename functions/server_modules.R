@@ -50,7 +50,7 @@ enterPayments <- function(id, api_key){
           payments <- get_payout_charges(payout_id, api_key)
           
           # Store cardholder update fees
-          cau_fees <- data.frame()
+          cau_fees <- list()
           
           # Loop through payments
           for (j in seq_len(nrow(payments)) ){
@@ -60,12 +60,18 @@ enterPayments <- function(id, api_key){
             if (payment_type == "stripe_fee"){
               # Extract needed info
               cau_info <- list(
-                payment_amt = abs(payments$amount[j]),
-                description = payments$description[j]
+                Amount = - abs(payments$amount[j]),
+                DetailType = "SalesItemLineDetail",
+                Description = payments$description[j],
+                SalesItemLineDetail = list(
+                  ItemRef = list(
+                    value = payment_config[[id]]$item_negative_id
+                  )
+                )
               )
               
               # Add info to cau_fees
-              cau_fees <- add_row_from_list(cau_fees, cau_info)
+              cau_fees <- append(cau_fees, list(cau_info))
             }
             
                 # Stripe payments + associated processing fees - sales
@@ -225,7 +231,7 @@ enterPayments <- function(id, api_key){
         }
         
         # Identify payment to include CAU update fees a part of
-        if (nrow(cau_fees) > 1){
+        if (length(cau_fees) > 1){
           # Get highest payment
           max_amt <- max(payments_to_enter$amount_positive)
           matches <- which(payments_to_enter$amount_positive == max_amt)
@@ -236,32 +242,37 @@ enterPayments <- function(id, api_key){
           first_match <- 0
         }
         
-        # TODO: enter payments, and add all the cau_fees as additional negative charges on the payment of greatest amt
+        # Enter payments
         for (k in seq_len(nrow(payments_to_enter)) ){
+          payment_row <- as.list(payments_to_enter[k, ])
+          
+          # Include CAU fees if applicable
+          cau_update_fees <- NULL
+          if (k == first_match){
+            cau_update_fees <- cau_fees
+          }
+          
           # Enter payment
           response <- post_sale(get_value(access_token), get_value(realmID), intuit_url,
-                                payment_date = get_value(payout_data)$arrival_date[i], # Date of payout
-                                donor_id = donor_id, # comes from Customers
-                                donor_email = email,
-                                # Stripe payment method
-                                payment_method_id = payment_config[[id]]$payment_method_id, # comes from Payment Methods
-                                # Bank of America checking
-                                deposit_account_id = payment_config[[id]]$deposit_account_id, # comes from Accounts, must be of type Bank
-                                billing_address = billing_address,
-                                shipping_date = payment_details$created,
-                                amount_positive = payment_details$amount,
-                                description_positive = payment_desc,
-                                # Honor/memorial gift
-                                item_positive_id = payment_config[[id]][[payment_cat]], # comes from Items, should indicate memorial/honoratum gift
-                                amount_negative = stripe_fee,
-                                description_negative = "Stripe Processing Fee",
-                                # Stripe processing charge
-                                item_negative_id = payment_config[[id]]$item_negative_id # comes from Items, should inidcate process change from stripe
+                                payment_date = payment_row$payment_date, # Date of payout to bank account
+                                donor_id = payment_row$donor_id, # ID for customer in Quickbooks
+                                donor_email = payment_row$donor_email,
+                                payment_method_id = payment_row$payment_method_id, # ID for payment method in Quickbooks
+                                deposit_account_id = payment_row$deposit_account_id, # ID for Bank of America checking account in Quickbooks, must be of type Bank
+                                billing_address = payment_row$billing_address,
+                                shipping_date = payment_row$shipping_date, # Date payment was made
+                                amount_positive = payment_row$amount_positive, # Gross amount of payment
+                                description_positive = payment_row$description_positive, # Reason for payment
+                                item_positive_id = payment_row$item_positive_id, # ID for Item in Quickbooks that is category for the reason for payment
+                                amount_negative = payment_row$amount_negative, # Fee amount
+                                description_negative = payment_row$description_negative, # Reason for fee
+                                item_negative_id = payment_row$item_negative_id, # ID for Item in Quickbooks that is category for the reason for fee
+                                cau_update_fees = cau_update_fees
           )
           
           # Print result
-          # sale_no <- get_sales_result(response, id)
-          # 
+          sale_no <- get_sales_result(response, id)
+
           # # Append row to table of entered stripe payments
           # status <- "Not Entered - Automation Failure"
           # if (!is.null(response)){
