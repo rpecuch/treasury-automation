@@ -80,8 +80,8 @@ server <- function(input, output, session) {
   # Retrieve and display Fundraise Up payouts
   displayPayouts("fundraise_up", fru_stripe_api_key)
   
-  # TODO: Enter payments received from Fundraise Up dashboard
-  # enterPayments("fundraise_up", stripe_api_key)
+  # Enter payments received from Fundraise Up dashboard
+  enterPayments("fundraise_up", fru_stripe_api_key)
   
   
   ## Expenses

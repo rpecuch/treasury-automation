@@ -33,7 +33,9 @@ enterPayments <- function(id, api_key){
       
       # Loop through payouts
       if (!shiny::isRunning()){
-        payout_data <- get_payouts(stripe_api_key, "2026-07-01", "2026-07-31")
+        id <- "fundraise_up"
+        api_key <- fru_stripe_api_key
+        payout_data <- get_payouts(api_key, "2026-07-01", "2026-07-31")
       } else{
         payout_data <- get_payouts(api_key, input$dates[1], input$dates[2])
       }
@@ -85,24 +87,30 @@ enterPayments <- function(id, api_key){
                   payment_details <- get_charge_details(payment_id, api_key)
 
                   # If no IMO metadata, check line items on checkout session
+                  desc_label <- ifelse(id == "fundraise_up", "FRU", "Stripe")
                   if (length(payment_details$metadata) == 0){
                     checkout_id <- get_checkout_session(payment_details$payment_intent, api_key)
                     product_id <- get_product_id(checkout_id, api_key)
                     payment_desc <- get_product_desc(product_id, api_key)
-                    payment_desc <- paste("Stripe -", payment_desc)
+                    # payment_desc <- paste("Stripe -", payment_desc)
                   } else{
                     if (str_detect(payment_details$description, "ecurring donation")){
-                      payment_desc <- paste("FRU - Recurring donor")
+                      payment_desc <- paste("Recurring donor")
                     } else if ("Campaign Name" %in% names(payment_details$metadata)){
-                      payment_desc <- paste("FRU -", payment_details$metadata$`Campaign Name`)
+                      payment_desc <- ifelse(str_detect(payment_details$metadata$`Campaign Name`, "Donate - Top Right"),
+                                             payment_details$description, payment_details$metadata$`Campaign Name`)
                     } else{
-                      payment_desc <- paste("Stripe -", payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
+                      payment_desc <- paste(payment_details$metadata$`In Memory/Honor of`, payment_details$metadata$`Enter Name Here`)
                     }
                   }
+                  payment_desc <- paste(desc_label, payment_desc, sep = " - ")
 
                   # Categorize as fundraiser or memorial donation
-                  # TODO - add for item_positive_individual (recurring donors)
-                  payment_cat <- ifelse(str_detect(tolower(payment_desc), memorial_pattern), "item_positive_memorial", "item_positive_fundraiser")
+                  payment_cat <- case_when(
+                    str_detect(tolower(payment_desc), memorial_pattern) ~ "item_positive_memorial",
+                    str_detect(tolower(payment_desc), indv_pattern) ~ "item_positive_individual",
+                    .default = "item_positive_fundraiser"
+                  )
 
                   # Check if customer (donor) exists by email
                   email <- ifelse(id == "fundraise_up", payment_details$metadata$`Supporter Email`, payment_details$billing_details$email)
@@ -166,7 +174,7 @@ enterPayments <- function(id, api_key){
                 else{
                   # Handling for unknown payment types
                   unexpected_payment <- entered_payment_list(payout.date = get_value(payout_data)$arrival_date[i],
-                                                          payment.date = payments$available_on[j],
+                                                          payment.date = payments$created[j],
                                                           status = "Not Entered - Unknown Type",
                                                           sales.receipt.number = NA,
                                                           description = paste("Unknown payment type:", payment_type),
@@ -175,7 +183,7 @@ enterPayments <- function(id, api_key){
                                                           net = payments$net[j],
                                                           donor = NA,
                                                           email = NA, address = NA)
-                  unexpected_payments <- add_row_from_list(unexpected_payments, unexpected_payment)
+                  entered_payments <- add_row_from_list(entered_payments, unexpected_payment)
 
                 }
 
@@ -280,8 +288,6 @@ enterPayments <- function(id, api_key){
             
           }
         }
-        
-        # TODO: add unexpected types
         
         # Create result message
         all_successful <- all(get_value(entered_payments)$QuickBooks.Status == "Entered Successfully")

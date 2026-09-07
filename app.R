@@ -10,13 +10,6 @@ library(openxlsx)
 library(stringr)
 library(shinycssloaders)
 
-# R2 TODO:
-# all cardholder updates for Stripe need to be added to one of the sales transactions
-  # if entered as expenses, cannot be matches with a bank deposit in quickbooks
-# FRU updates
-# modal/spinner during stripe progress
-# add fundraising keywords as well and if none present prompt me to categorize
-
 # Load environmental vars
 if (Sys.getenv("APP_ENV") != "production"){
   library(dotenv)

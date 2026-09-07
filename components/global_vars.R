@@ -48,3 +48,12 @@ memorial_pattern <- regex(
         collapse = "|"),
   ignore_case = TRUE
 )
+
+# Keywords for differentiating donations that are not fundraisers / memorial
+indv_keywords <- c("recurring", "one-time")
+indv_pattern <- regex(
+  paste(str_replace_all(str_to_lower(str_trim(indv_keywords)),
+                        "([.|()\\[\\]{}+*?^$\\\\])", "\\\\\\1"),
+        collapse = "|"),
+  ignore_case = TRUE
+)

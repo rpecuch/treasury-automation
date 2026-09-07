@@ -4,6 +4,7 @@
     "item_negative_id": "60",
     "item_positive_memorial": "38",
     "item_positive_fundraiser": "32",
+    "item_positive_individual": "7",
     "payment_method_id": "23"
   },
   "fundraise_up": {
