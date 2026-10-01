@@ -218,7 +218,8 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
                       payment_method_id, deposit_account_id,
                       billing_address, shipping_date, 
                       amount_positive, description_positive, item_positive_id,
-                      amount_negative, description_negative, item_negative_id){
+                      amount_negative, description_negative, item_negative_id,
+                      cau_update_fees = NULL){
   
   # If Customer could not be created
   if (is.null(donor_id)){
@@ -252,11 +253,9 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
     DepositToAccountRef = list(
       value = deposit_account_id
     ),
-    # Billing address
-    # BillAddr = billing_address,
     # Shipping info
     ShipDate = shipping_date,
-    # Line items (1 positive, 1 negative)
+    # Line items
     Line = list(
       # Positive line item: payment received
       list(
@@ -282,6 +281,11 @@ post_sale <- function(access_token, realm_id, intuit_url, payment_date,
       )
     )
   )
+  
+  # Add CAU update fees if applicable
+  if (!is.null(cau_update_fees)){
+    body$Line <- c(body$Line, cau_update_fees)
+  }
   
   # Post sales receipt
   res <- POST(
@@ -357,10 +361,10 @@ post_customer <- function(access_token, realm_id, intuit_url,
   # Output Result
   # -----------------------------
   if (!is.null(content$Customer)) {
-    cat("Customer created successfully.\n")
+    cat("\nCustomer created successfully:\n")
     
     # Print created customer info
-    print(content$Customer$DisplayName)
+    cat(content$Customer$DisplayName)
     return(content$Customer$Id)
   } else {
     print("Failed to create customer.\n")

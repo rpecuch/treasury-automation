@@ -13,28 +13,8 @@ ui <- fluidPage(
     
     mainPanel(
       tabsetPanel(
-        tabPanel("Stripe",
-                 # Allow user to choose when to look for payments
-                 dateRangeInput(
-                   inputId = "stripe_date",
-                   label = "Bank Statement Dates:",
-                   start = first_day_prev_month(),
-                   end = last_day_prev_month()
-                 ),
-                 # Display payouts that will be entered
-                 div(style = "width: 700px;",
-                     h3("Stripe Payouts"),
-                     DTOutput("stripe_payouts_table")
-                 ),
-                 # Allow entering payments on demand
-                 actionButton("stripe", "Enter Stripe Payments"),
-                 withSpinner(verbatimTextOutput("stripe_result")),
-                 # Download entered payments
-                 downloadButton(
-                   outputId = "download_stripe",
-                   label = "Download Entered Stripe Payments"
-                 )
-        )
+        makePaymentTab(title = "Stripe", id="stripe"),
+        makePaymentTab(title = "Fundraise Up", id="fundraise_up")
         
         # tabPanel("Check Expense",
         #          actionButton("check_entry", "Enter Check Expense")
